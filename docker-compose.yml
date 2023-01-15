@@ -1,0 +1,25 @@
+version: '3.5'
+
+services:
+  db:
+    image: timescale/timescaledb:latest-pg15
+    container_name: timescale-assignment-db
+    environment:
+      POSTGRES_USER: homework
+      POSTGRES_PASSWORD: abc123
+    volumes:
+      - ./scripts/flyway/data:/flyway/data
+    ports:
+      - 5432:5432
+
+  migrations:
+    container_name: timescale-assignment-migrations
+    image: flyway/flyway:9-alpine
+    command:
+      - baseline
+      - migrate
+    volumes:
+      - ./scripts/flyway/flyway.conf:/flyway/conf/flyway.conf
+      - ./scripts/flyway/sql:/flyway/sql
+    depends_on:
+      - db
