@@ -1,7 +1,7 @@
 version: '3.5'
 
 services:
-  db:
+  timescaledb:
     image: timescale/timescaledb:latest-pg15
     container_name: timescale-assignment-db
     environment:
@@ -10,10 +10,10 @@ services:
     volumes:
       - ./scripts/flyway/data:/flyway/data
     ports:
-      - 5432:5432
+      - 5434:5432
 
-  migrations:
-    container_name: timescale-assignment-migrations
+  flyway:
+    container_name: timescale-assignment-flyway
     image: flyway/flyway:9-alpine
     command:
       - baseline
@@ -22,4 +22,15 @@ services:
       - ./scripts/flyway/flyway.conf:/flyway/conf/flyway.conf
       - ./scripts/flyway/sql:/flyway/sql
     depends_on:
-      - db
+      - timescaledb
+
+  app:
+    container_name: timescale-assignment-app
+    build: .
+    environment:
+      FILE_PATH: /app/query_params.csv
+      DB_URL: postgres://homework:abc123@timescaledb:5432/homework
+    volumes:
+      - ./query_params.csv:/app/query_params.csv
+    depends_on:
+      - flyway

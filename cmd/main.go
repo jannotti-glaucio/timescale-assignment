@@ -1,25 +1,40 @@
 package main
 
 import (
+	"os"
+	"time"
+
+	"github.com/jannotti-glaucio/timescale-assignment/internal/env"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/logger"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/parsers"
+	"github.com/jannotti-glaucio/timescale-assignment/internal/summarizer"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/workers"
-
-	"context"
-
-	_ "go.uber.org/automaxprocs"
 )
 
 func main() {
 
-	// Init Logger
+	// Logger
 	logger.Init()
 	defer logger.Clean()
 
-	// Init Context
-	context.Background()
+	// Environment variables
+	env.LoadFromFile()
+	env.CheckVars()
 
-	requests := parsers.ParseFile("./query_params.csv")
+	filePath := os.Getenv(env.FilePath)
+	requests := parsers.ParseFile(filePath)
 
-	workers.RunWorkers(requests)
+	processingStart := time.Now()
+	resultsByHost := workers.RunWorkers(requests)
+	totalProcessingTime := time.Since(processingStart)
+
+	summarizeResult := summarizer.SummarizeResults(resultsByHost)
+
+	logger.Info("##### Processing Results #####")
+	logger.Info("Number of Queries:     [%d]", summarizeResult.NumberOfQueries)
+	logger.Info("Total Processing Time: [%v] milliseconds", totalProcessingTime.Milliseconds())
+	logger.Info("Minimum Query Time:    [%v] nanoseconds", summarizeResult.MinimumQueryTime.Nanoseconds())
+	logger.Info("Median Query Time:     [%v] nanoseconds", summarizeResult.MedianQueryTime.Nanoseconds())
+	logger.Info("Average Query Time:    [%v] nanoseconds", summarizeResult.AverageQueryTime.Nanoseconds())
+	logger.Info("Maximum Query Time:    [%v] nanoseconds", summarizeResult.MaximumQueryTime.Nanoseconds())
 }

@@ -1,71 +1,80 @@
 package workers
 
 import (
-	"github.com/jannotti-glaucio/timescale-assignment/internal/database"
+	"context"
+	"time"
+
 	"github.com/jannotti-glaucio/timescale-assignment/internal/logger"
-	"github.com/jannotti-glaucio/timescale-assignment/internal/model"
+	"github.com/jannotti-glaucio/timescale-assignment/internal/parsers"
+	"github.com/jannotti-glaucio/timescale-assignment/internal/repository"
 
 	"sync"
 )
 
 type ResultChannel struct {
 	HostName string
-	Results  []model.QueryResult
+	Results  []parsers.QueryResult
 }
 
-func RunWorkers(requests model.QueryRequestsByHost) model.QueryResultsByHost {
+func RunWorkers(requests parsers.QueryRequestsByHost) parsers.QueryResults {
 
 	numJobs := len(requests)
-	var waitGroup sync.WaitGroup
-	channel := make(chan ResultChannel, numJobs)
+	var waitToStart sync.WaitGroup
+	var waitToFinish sync.WaitGroup
+	resulChan := make(chan ResultChannel, numJobs)
 
+	waitToStart.Add(1)
 	for key, value := range requests {
-		waitGroup.Add(1)
+		waitToFinish.Add(1)
 
-		logger.Info("Starting worker for hostname %s", key)
-		go worker(key, value, &waitGroup, channel)
+		logger.Info("Starting worker for hostname [%v]", key)
+		go worker(key, value, &waitToStart, &waitToFinish, resulChan)
 	}
+	waitToStart.Done()
 
-	waitGroup.Wait()
+	waitToFinish.Wait()
 
-	resultsByHost := make(model.QueryResultsByHost)
+	defer close(resulChan)
+	var allHostsResults parsers.QueryResults
 	for a := 1; a <= numJobs; a++ {
-		result := <-channel
+		result := <-resulChan
 		results := result.Results
 
-		resultsByHost[result.HostName] = results
+		allHostsResults = append(allHostsResults, results...)
 	}
-	close(channel)
 
-	return resultsByHost
+	return allHostsResults
 }
 
-func worker(hostname string, requests model.QueryRequests, waitGroup *sync.WaitGroup, channel chan<- ResultChannel) {
-	defer waitGroup.Done()
+func worker(hostname string, requests parsers.QueryRequests, waitToStart *sync.WaitGroup, waitToFinish *sync.WaitGroup, resulChan chan<- ResultChannel) {
+	defer waitToFinish.Done()
 
-	logger.Info("Starting executing %d queries for hostname %s", len(requests), hostname)
-	var results model.QueryResults
+	ctx := context.Background()
 
-	conn := database.OpenConnection("postgres://homework:abc123@localhost:5432/homework")
-	defer database.CloseConnection(conn)
+	logger.Info("Starting executing %d queries for hostname [%s]", len(requests), hostname)
+	var results parsers.QueryResults
+
+	conn := repository.OpenConnection(ctx)
+	defer repository.CloseConnection(ctx, conn)
+
+	waitToStart.Wait()
 
 	for _, request := range requests {
-		logger.Debug("Executing query for hostname %s, startDate: %s, endData: %s", hostname, request.StartDate, request.EndData)
 
-		row := database.QueryRow(conn, "select max(usage) as maxUsage, min(usage) as minUsage from cpu_usage cu where host = '$1' and ts between '$2' and '$3'", hostname, request.StartDate, request.EndData)
-		var maxUsage int
-		var minUsage int
-		row.Scan(&maxUsage, &minUsage)
+		start := time.Now()
+		maxUsage, minUsage := repository.RunQuery(ctx, conn, hostname, request.StartDate, request.EndDate)
+		duration := time.Since(start)
 
-		result := model.QueryResult{
+		result := parsers.QueryResult{
+			Duration: duration,
 			MinUsage: maxUsage,
-			MAxUsage: minUsage,
+			MaxUsage: minUsage,
 		}
 		results = append(results, result)
 	}
 
-	logger.Info("Finished executing queries for hostname %s", hostname)
-	channel <- ResultChannel{
+	logger.Info("Finished executing queries for hostname [%s]", hostname)
+	resulChan <- ResultChannel{
 		HostName: hostname,
 		Results:  results,
 	}

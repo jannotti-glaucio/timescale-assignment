@@ -1,15 +1,18 @@
 package parsers
 
 import (
+	"time"
+
 	"github.com/jannotti-glaucio/timescale-assignment/internal/logger"
-	"github.com/jannotti-glaucio/timescale-assignment/internal/model"
 
 	"bufio"
 	"os"
 	"strings"
 )
 
-func ParseFile(path string) model.QueryRequestsByHost {
+const timeFormat = "2006-01-02 15:04:05"
+
+func ParseFile(path string) QueryRequestsByHost {
 
 	file, err := os.Open(path)
 	if err != nil {
@@ -24,27 +27,25 @@ func ParseFile(path string) model.QueryRequestsByHost {
 	return requests
 }
 
-func parseLines(file *os.File) model.QueryRequestsByHost {
+func parseLines(file *os.File) QueryRequestsByHost {
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 
-	requests := make(model.QueryRequestsByHost)
-	line := 0
+	requests := make(QueryRequestsByHost)
+	count := 0
 	for scanner.Scan() {
-		line++
+		count++
 
 		// Ignore head line
-		if line <= 1 {
+		if count <= 1 {
 			continue
 		}
 
-		line := strings.Split(scanner.Text(), ",")
+		hostName, startDate, endDate := validateAndConvertColumns(scanner, count)
 
-		hostName := line[0]
-
-		request := model.QueryRequest{
-			StartDate: line[1],
-			EndData:   line[2],
+		request := QueryRequest{
+			StartDate: startDate,
+			EndDate:   endDate,
 		}
 
 		groupByHost(requests, hostName, request)
@@ -52,7 +53,37 @@ func parseLines(file *os.File) model.QueryRequestsByHost {
 	return requests
 }
 
-func groupByHost(requestsByHost model.QueryRequestsByHost, hostName string, request model.QueryRequest) {
+func validateAndConvertColumns(scanner *bufio.Scanner, count int) (string, time.Time, time.Time) {
+
+	line := strings.Split(scanner.Text(), ",")
+	if len(line) < 3 {
+		logger.Fatal("Error reading line [%d], it contains only [%d] columns: %s", count, len(line), scanner.Text())
+	}
+
+	hostName := line[0]
+	if len(hostName) == 0 {
+		logger.Fatal("Error reading line [%d], invalid hostname column [%s]", count, hostName)
+	}
+
+	if len(line[1]) == 0 {
+		logger.Fatal("Error reading line [%d], invalid startDate column [%s]", count, line[1])
+	}
+	startDate, err := time.Parse(timeFormat, line[1])
+	if err != nil {
+		logger.Fatal("Error reading line [%d], invalid startDate column [%s]", count, line[1])
+	}
+
+	if len(line[2]) == 0 {
+		logger.Fatal("Error reading line [%d], invalid endDate column [%s]", count, line[2])
+	}
+	endDate, err := time.Parse(timeFormat, line[2])
+	if err != nil {
+		logger.Fatal("Error reading line [%d], invalid endDate column [%s]", count, line[2])
+	}
+	return hostName, startDate, endDate
+}
+
+func groupByHost(requestsByHost QueryRequestsByHost, hostName string, request QueryRequest) {
 
 	requests, exists := requestsByHost[hostName]
 
@@ -61,7 +92,7 @@ func groupByHost(requestsByHost model.QueryRequestsByHost, hostName string, requ
 		requestsByHost[hostName] = requests
 
 	} else {
-		var requests model.QueryRequests
+		var requests QueryRequests
 		requests = append(requests, request)
 		requestsByHost[hostName] = requests
 	}

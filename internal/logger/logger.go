@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"fmt"
 	"sync"
 
 	"go.uber.org/zap"
@@ -22,25 +23,25 @@ func Clean() error {
 }
 
 func Info(message string, args ...interface{}) {
-	if len(args) == 0 {
-		zap.L().Info(message)
-	} else {
-		zap.L().Sugar().Infof(message, args)
+	if len(args) > 0 {
+		message = fmt.Sprintf(message, args...)
 	}
+
+	zap.L().Info(message)
 }
 
 func Debug(message string, args ...interface{}) {
-	if len(args) == 0 {
-		zap.L().Debug(message)
-	} else {
-		zap.L().Sugar().Debugf(message, args)
+	if len(args) > 0 {
+		message = fmt.Sprintf(message, args...)
 	}
+
+	zap.L().Debug(message)
 }
 
 func Fatal(message string, args ...interface{}) {
-	if len(args) == 0 {
-		zap.L().Fatal(message)
-	} else {
-		zap.L().Sugar().Fatalf(message, args)
+	if len(args) > 0 {
+		message = fmt.Sprintf(message, args...)
 	}
+
+	zap.L().Fatal(message)
 }
