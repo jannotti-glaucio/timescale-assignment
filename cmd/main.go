@@ -19,7 +19,10 @@ func main() {
 
 	// Environment variables
 	env.LoadFromFile()
-	env.CheckVars()
+	err := env.CheckVars()
+	if err != nil {
+		logger.Fatal("Error loading envrionment variables: %v", err)
+	}
 
 	filePath := os.Getenv(env.FilePath)
 	requests := parsers.ParseFile(filePath)

@@ -20,7 +20,7 @@ func SummarizeResults(results parsers.QueryResults) SummarizeResult {
 	sort.Sort(parsers.QueryResultsByDuration(results))
 
 	numberOfQueries := len(results)
-	medianQueryTime := getMedian(numberOfQueries, results)
+	medianQueryTime := getMedian(results)
 
 	minimumQueryTime, maximumQueryTime, averageQueryTime := getMinAndMaxAndAverage(results)
 
@@ -61,7 +61,9 @@ func getMinAndMaxAndAverage(results parsers.QueryResults) (time.Duration, time.D
 	return minimumQueryTime, maximumQueryTime, averageQueryTime
 }
 
-func getMedian(len int, results parsers.QueryResults) time.Duration {
+func getMedian(results parsers.QueryResults) time.Duration {
+
+	len := len(results)
 
 	if len == 0 {
 		return time.Duration(0)
@@ -71,11 +73,12 @@ func getMedian(len int, results parsers.QueryResults) time.Duration {
 	}
 
 	if len%2 == 0 {
-		// If odd length
+		// If even length
 		middle := len / 2
-		return (results[middle].Duration + results[middle].Duration) / 2
+		return (results[middle-1].Duration + results[middle].Duration) / 2
 
 	} else {
+		// If odd length
 		middle := len / 2
 		return results[middle].Duration
 	}

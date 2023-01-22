@@ -31,6 +31,6 @@ services:
       FILE_PATH: /app/query_params.csv
       DB_URL: postgres://homework:abc123@timescaledb:5432/homework
     volumes:
-      - ./query_params.csv:/app/query_params.csv
+      - ./test/data/query_params.csv:/app/query_params.csv
     depends_on:
       - flyway
