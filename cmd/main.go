@@ -25,7 +25,10 @@ func main() {
 	}
 
 	filePath := os.Getenv(env.FilePath)
-	requests := parsers.ParseFile(filePath)
+	requests, err := parsers.ParseFile(filePath)
+	if err != nil {
+		logger.Fatal("Error parsing file: %v", err)
+	}
 
 	processingStart := time.Now()
 	resultsByHost := workers.RunWorkers(requests)

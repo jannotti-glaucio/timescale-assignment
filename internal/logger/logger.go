@@ -23,17 +23,17 @@ func Clean() error {
 }
 
 func Info(message string, args ...interface{}) {
-	message = formatMessage(message, args)
+	message = formatMessage(message, args...)
 	zap.L().Info(message)
 }
 
 func Debug(message string, args ...interface{}) {
-	message = formatMessage(message, args)
+	message = formatMessage(message, args...)
 	zap.L().Debug(message)
 }
 
 func Fatal(message string, args ...interface{}) {
-	message = formatMessage(message, args)
+	message = formatMessage(message, args...)
 	zap.L().Fatal(message)
 }
 

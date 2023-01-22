@@ -54,7 +54,11 @@ func worker(hostname string, requests parsers.QueryRequests, waitToStart *sync.W
 	logger.Info("Starting executing %d queries for hostname [%s]", len(requests), hostname)
 	var results parsers.QueryResults
 
-	conn := repository.OpenConnection(ctx)
+	conn, err := repository.OpenConnection(ctx)
+	if err != nil {
+		logger.Fatal("Error opening database connection [%v]", err)
+	}
+
 	defer repository.CloseConnection(ctx, conn)
 
 	waitToStart.Wait()
@@ -62,8 +66,11 @@ func worker(hostname string, requests parsers.QueryRequests, waitToStart *sync.W
 	for _, request := range requests {
 
 		start := time.Now()
-		maxUsage, minUsage := repository.RunQuery(ctx, conn, hostname, request.StartDate, request.EndDate)
+		maxUsage, minUsage, err := repository.RunQuery(ctx, conn, hostname, request.StartDate, request.EndDate)
 		duration := time.Since(start)
+		if err != nil {
+			logger.Fatal("Error executing query: %v", err)
+		}
 
 		result := parsers.QueryResult{
 			Duration: duration,

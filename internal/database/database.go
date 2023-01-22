@@ -1,20 +1,20 @@
 package database
 
 import (
-	"github.com/jannotti-glaucio/timescale-assignment/internal/logger"
+	"github.com/jannotti-glaucio/timescale-assignment/internal/exceptions"
 
 	"context"
 
 	pgx "github.com/jackc/pgx/v5"
 )
 
-func OpenConnection(ctx context.Context, url string) *pgx.Conn {
+func OpenConnection(ctx context.Context, url string) (*pgx.Conn, error) {
 
 	conn, err := pgx.Connect(ctx, url)
 	if err != nil {
-		logger.Fatal("Unable to connect to database: %v", err)
+		exceptions.ThrowError("Unable to connect to database: %v", err)
 	}
-	return conn
+	return conn, nil
 }
 
 func CloseConnection(ctx context.Context, conn *pgx.Conn) {
