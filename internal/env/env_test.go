@@ -1,10 +1,10 @@
 package env
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
+	"github.com/jannotti-glaucio/timescale-assignment/internal/excepts"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,7 +27,7 @@ func TestCheckVars(t *testing.T) {
 		err := CheckVars()
 
 		assert.NotNil(t, err)
-		assert.Equal(t, err.Error(), fmt.Sprintf(errorMissingVariable, FilePath))
+		assert.Equal(t, err.Code, excepts.MissingEnvVariable)
 	})
 	t.Run("missing "+DbUrl+" variable", func(t *testing.T) {
 		os.Setenv(FilePath, testFilePath)
@@ -36,6 +36,6 @@ func TestCheckVars(t *testing.T) {
 		err := CheckVars()
 
 		assert.NotNil(t, err)
-		assert.Equal(t, err.Error(), fmt.Sprintf(errorMissingVariable, DbUrl))
+		assert.Equal(t, err.Code, excepts.MissingEnvVariable)
 	})
 }

@@ -74,8 +74,8 @@ func worker(hostname string, requests parsers.QueryRequests, waitToStart *sync.W
 
 		result := parsers.QueryResult{
 			Duration: duration,
-			MinUsage: maxUsage,
-			MaxUsage: minUsage,
+			MinUsage: *maxUsage,
+			MaxUsage: *minUsage,
 		}
 		results = append(results, result)
 	}

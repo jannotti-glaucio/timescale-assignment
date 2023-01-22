@@ -1,4 +1,4 @@
-package exceptions
+package excepts
 
 import (
 	"fmt"
@@ -7,16 +7,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestThrowError(t *testing.T) {
+func TestThrowException(t *testing.T) {
 	t.Run("plain message", func(t *testing.T) {
-		err := ThrowError("error message")
+		err := ThrowException("ERR-001", "error message")
 
+		assert.Equal(t, "ERR-001", err.Code)
 		assert.Equal(t, err.Error(), "error message")
-
 	})
 	t.Run("message with parameters", func(t *testing.T) {
-		err := ThrowError("missing field %s", "field1")
+		err := ThrowException("ERR-002", "missing field %s", "field1")
 
+		assert.Equal(t, "ERR-002", err.Code)
 		assert.Equal(t, err.Error(), fmt.Sprintf("missing field %s", "field1"))
 	})
 }

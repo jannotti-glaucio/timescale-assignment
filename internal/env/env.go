@@ -3,7 +3,7 @@ package env
 import (
 	"os"
 
-	"github.com/jannotti-glaucio/timescale-assignment/internal/exceptions"
+	"github.com/jannotti-glaucio/timescale-assignment/internal/excepts"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/file"
 	"github.com/joho/godotenv"
 )
@@ -11,22 +11,19 @@ import (
 const FilePath = "FILE_PATH"
 const DbUrl = "DB_URL"
 
-const errorMissingVariable = "Missing environment variable %s"
-const errorLoadingFile = "Error loading .env file: %v"
-
-func CheckVars() error {
+func CheckVars() *excepts.Exception {
 	if os.Getenv(FilePath) == "" {
-		return exceptions.ThrowError(errorMissingVariable, FilePath)
+		return excepts.ThrowException(excepts.MissingEnvVariable, "Missing environment variable %s", FilePath)
 	}
 
 	if os.Getenv(DbUrl) == "" {
-		return exceptions.ThrowError(errorMissingVariable, DbUrl)
+		return excepts.ThrowException(excepts.MissingEnvVariable, "Missing environment variable %s", DbUrl)
 	}
 
 	return nil
 }
 
-func LoadFromFile() error {
+func LoadFromFile() *excepts.Exception {
 
 	if !file.FileExists("./.env") {
 		return nil
@@ -34,7 +31,7 @@ func LoadFromFile() error {
 
 	err := godotenv.Load()
 	if err != nil {
-		return exceptions.ThrowError(errorLoadingFile, err)
+		return excepts.ThrowException(excepts.ErrorLoadingEnvFile, "Error loading .env file: %v", err)
 	}
 
 	return nil
