@@ -1,25 +1,40 @@
 package database
 
 import (
-	"context"
-
-	pgx "github.com/jackc/pgx/v5"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/excepts"
+
+	"database/sql"
+	"os"
+
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-func OpenConnection(ctx context.Context, url string) (*pgx.Conn, *excepts.Exception) {
+func OpenConnection() (*sql.DB, error) {
 
-	conn, err := pgx.Connect(ctx, url)
-	if err != nil {
-		return nil, excepts.ThrowException(excepts.ErrorConnectingToDB, "Unable to connect to database: %v", err)
+	url := os.Getenv("DB_URL")
+
+	db, openErr := sql.Open("pgx", url)
+	if openErr != nil {
+		return nil, excepts.ThrowException(excepts.ErrorConnectingToDB, "Unable to connect to database: %v", openErr)
 	}
-	return conn, nil
+
+	pingErr := db.Ping()
+	if pingErr != nil {
+		return nil, excepts.ThrowException(excepts.ErrorConnectingToDB, "Unable to ping the database connection: %v", pingErr)
+	}
+
+	return db, nil
 }
 
-func CloseConnection(ctx context.Context, conn *pgx.Conn) {
-	conn.Close(ctx)
-}
+func CloseConnection(db *sql.DB) error {
+	if db == nil {
+		return nil
+	}
 
-func QueryRow(ctx context.Context, conn *pgx.Conn, sql string, args ...any) pgx.Row {
-	return conn.QueryRow(ctx, sql, args...)
+	err := db.Close()
+	if err != nil {
+		return excepts.ThrowException(excepts.ErrorDisconectingFromDB, "Unable to close database connection: %v", err)
+	}
+
+	return nil
 }

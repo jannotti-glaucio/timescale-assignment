@@ -11,7 +11,7 @@ import (
 const FilePath = "FILE_PATH"
 const DbUrl = "DB_URL"
 
-func CheckVars() *excepts.Exception {
+func CheckVars() error {
 	if os.Getenv(FilePath) == "" {
 		return excepts.ThrowException(excepts.MissingEnvVariable, "Missing environment variable %s", FilePath)
 	}
@@ -23,7 +23,7 @@ func CheckVars() *excepts.Exception {
 	return nil
 }
 
-func LoadFromFile() *excepts.Exception {
+func LoadFromFile() error {
 
 	if !file.FileExists("./.env") {
 		return nil

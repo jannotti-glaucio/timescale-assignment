@@ -1,22 +1,29 @@
 package workers
 
 import (
-	"context"
-	"time"
-
 	"github.com/jannotti-glaucio/timescale-assignment/internal/logger"
-	"github.com/jannotti-glaucio/timescale-assignment/internal/parsers"
+	"github.com/jannotti-glaucio/timescale-assignment/internal/model"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/repository"
 
 	"sync"
+	"time"
 )
 
-type ResultChannel struct {
-	HostName string
-	Results  []parsers.QueryResult
+type (
+	Workers struct {
+		repo repository.Repository
+	}
+	ResultChannel struct {
+		HostName string
+		Results  []model.QueryResult
+	}
+)
+
+func NewWorkers(repo repository.Repository) Workers {
+	return Workers{repo: repo}
 }
 
-func RunWorkers(requests parsers.QueryRequestsByHost) parsers.QueryResults {
+func (w Workers) RunWorkers(requests model.QueryRequestsByHost) model.QueryResults {
 
 	numJobs := len(requests)
 	var waitToStart sync.WaitGroup
@@ -28,14 +35,14 @@ func RunWorkers(requests parsers.QueryRequestsByHost) parsers.QueryResults {
 		waitToFinish.Add(1)
 
 		logger.Info("Starting worker for hostname [%v]", key)
-		go worker(key, value, &waitToStart, &waitToFinish, resulChan)
+		go runWorker(w.repo, key, value, &waitToStart, &waitToFinish, resulChan)
 	}
 	waitToStart.Done()
 
 	waitToFinish.Wait()
 
 	defer close(resulChan)
-	var allHostsResults parsers.QueryResults
+	var allHostsResults model.QueryResults
 	for a := 1; a <= numJobs; a++ {
 		result := <-resulChan
 		results := result.Results
@@ -46,36 +53,38 @@ func RunWorkers(requests parsers.QueryRequestsByHost) parsers.QueryResults {
 	return allHostsResults
 }
 
-func worker(hostname string, requests parsers.QueryRequests, waitToStart *sync.WaitGroup, waitToFinish *sync.WaitGroup, resulChan chan<- ResultChannel) {
+func runWorker(repository repository.Repository, hostname string, requests model.QueryRequests, waitToStart *sync.WaitGroup,
+	waitToFinish *sync.WaitGroup, resulChan chan<- ResultChannel) {
+
+	err := execWorker(repository, hostname, requests, waitToStart, waitToFinish, resulChan)
+	if err != nil {
+		logger.Fatal("Error executing worker: %v", err)
+	}
+}
+
+func execWorker(repository repository.Repository, hostname string, requests model.QueryRequests, waitToStart *sync.WaitGroup,
+	waitToFinish *sync.WaitGroup, resulChan chan<- ResultChannel) error {
+
 	defer waitToFinish.Done()
 
-	ctx := context.Background()
-
 	logger.Info("Starting executing %d queries for hostname [%s]", len(requests), hostname)
-	var results parsers.QueryResults
-
-	conn, err := repository.OpenConnection(ctx)
-	if err != nil {
-		logger.Fatal("Error opening database connection [%v]", err)
-	}
-
-	defer repository.CloseConnection(ctx, conn)
+	var results model.QueryResults
 
 	waitToStart.Wait()
 
 	for _, request := range requests {
 
 		start := time.Now()
-		maxUsage, minUsage, err := repository.RunQuery(ctx, conn, hostname, request.StartDate, request.EndDate)
+		maxUsage, minUsage, err := repository.RunQuery(hostname, request.StartDate, request.EndDate)
 		duration := time.Since(start)
 		if err != nil {
-			logger.Fatal("Error executing query: %v", err)
+			return err
 		}
 
-		result := parsers.QueryResult{
+		result := model.QueryResult{
 			Duration: duration,
-			MinUsage: *maxUsage,
-			MaxUsage: *minUsage,
+			MinUsage: *minUsage,
+			MaxUsage: *maxUsage,
 		}
 		results = append(results, result)
 	}
@@ -85,4 +94,6 @@ func worker(hostname string, requests parsers.QueryRequests, waitToStart *sync.W
 		HostName: hostname,
 		Results:  results,
 	}
+
+	return nil
 }

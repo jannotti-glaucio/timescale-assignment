@@ -4,7 +4,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/jannotti-glaucio/timescale-assignment/internal/parsers"
+	"github.com/jannotti-glaucio/timescale-assignment/internal/model"
 )
 
 type SummarizeResult struct {
@@ -15,9 +15,9 @@ type SummarizeResult struct {
 	MaximumQueryTime time.Duration
 }
 
-func SummarizeResults(results parsers.QueryResults) SummarizeResult {
+func SummarizeResults(results model.QueryResults) SummarizeResult {
 
-	sort.Sort(parsers.QueryResultsByDuration(results))
+	sort.Sort(model.QueryResultsByDuration(results))
 
 	numberOfQueries := len(results)
 	medianQueryTime := getMedian(results)
@@ -33,7 +33,7 @@ func SummarizeResults(results parsers.QueryResults) SummarizeResult {
 	}
 }
 
-func getMinAndMaxAndAverage(results parsers.QueryResults) (time.Duration, time.Duration, time.Duration) {
+func getMinAndMaxAndAverage(results model.QueryResults) (time.Duration, time.Duration, time.Duration) {
 
 	var durationsSum time.Duration
 	var minimumQueryTime, maximumQueryTime time.Duration
@@ -61,7 +61,7 @@ func getMinAndMaxAndAverage(results parsers.QueryResults) (time.Duration, time.D
 	return minimumQueryTime, maximumQueryTime, averageQueryTime
 }
 
-func getMedian(results parsers.QueryResults) time.Duration {
+func getMedian(results model.QueryResults) time.Duration {
 
 	len := len(results)
 

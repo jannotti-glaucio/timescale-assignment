@@ -2,20 +2,19 @@ package logger
 
 import (
 	"fmt"
-	"sync"
 
+	"github.com/jannotti-glaucio/timescale-assignment/internal/excepts"
 	"go.uber.org/zap"
 )
 
-var (
-	once sync.Once
-)
+func Init() error {
+	singleton, err := zap.NewDevelopment()
+	if err != nil {
+		return excepts.ThrowException(excepts.ErrorConfiguringLogger, "Error configuring logger")
+	}
 
-func Init() {
-	once.Do(func() {
-		singleton, _ := zap.NewDevelopment()
-		zap.ReplaceGlobals(singleton)
-	})
+	zap.ReplaceGlobals(singleton)
+	return nil
 }
 
 func Clean() error {

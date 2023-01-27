@@ -1,3 +1,5 @@
+//go:build !integration
+
 package env
 
 import (
@@ -25,17 +27,19 @@ func TestCheckVars(t *testing.T) {
 		os.Setenv(DbUrl, testDbUrl)
 
 		err := CheckVars()
+		exception := excepts.FromError(err)
 
 		assert.NotNil(t, err)
-		assert.Equal(t, err.Code, excepts.MissingEnvVariable)
+		assert.Equal(t, exception.Code, excepts.MissingEnvVariable)
 	})
 	t.Run("missing "+DbUrl+" variable", func(t *testing.T) {
 		os.Setenv(FilePath, testFilePath)
 		os.Setenv(DbUrl, "")
 
 		err := CheckVars()
+		exception := excepts.FromError(err)
 
 		assert.NotNil(t, err)
-		assert.Equal(t, err.Code, excepts.MissingEnvVariable)
+		assert.Equal(t, exception.Code, excepts.MissingEnvVariable)
 	})
 }

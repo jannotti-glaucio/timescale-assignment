@@ -4,37 +4,22 @@ import (
 	"os"
 	"time"
 
+	"github.com/jannotti-glaucio/timescale-assignment/internal/database"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/env"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/logger"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/parsers"
+	"github.com/jannotti-glaucio/timescale-assignment/internal/repository"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/summarizer"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/workers"
 )
 
 func main() {
 
-	// Logger
-	logger.Init()
-	defer logger.Clean()
+	totalProcessingTime, summarizeResult, err := process()
 
-	// Environment variables
-	env.LoadFromFile()
-	err := env.CheckVars()
 	if err != nil {
-		logger.Fatal("Error loading envrionment variables: %v", err)
+		logger.Fatal("Error on processing: %v", err)
 	}
-
-	filePath := os.Getenv(env.FilePath)
-	requests, err := parsers.ParseFile(filePath)
-	if err != nil {
-		logger.Fatal("Error parsing file: %v", err)
-	}
-
-	processingStart := time.Now()
-	resultsByHost := workers.RunWorkers(requests)
-	totalProcessingTime := time.Since(processingStart)
-
-	summarizeResult := summarizer.SummarizeResults(resultsByHost)
 
 	logger.Info("##### Processing Results #####")
 	logger.Info("Number of Queries:     [%d]", summarizeResult.NumberOfQueries)
@@ -43,4 +28,51 @@ func main() {
 	logger.Info("Median Query Time:     [%v] nanoseconds", summarizeResult.MedianQueryTime.Nanoseconds())
 	logger.Info("Average Query Time:    [%v] nanoseconds", summarizeResult.AverageQueryTime.Nanoseconds())
 	logger.Info("Maximum Query Time:    [%v] nanoseconds", summarizeResult.MaximumQueryTime.Nanoseconds())
+}
+
+func process() (*time.Duration, *summarizer.SummarizeResult, error) {
+
+	// Logger
+	err := logger.Init()
+	if err != nil {
+		return nil, nil, err
+	}
+	defer logger.Clean()
+
+	// Environment variables
+	err = env.LoadFromFile()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Validate env variables
+	err = env.CheckVars()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Env files
+	filePath := os.Getenv(env.FilePath)
+	requests, err := parsers.ParseFile(filePath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Database
+	db, err := database.OpenConnection()
+	if err != nil {
+		return nil, nil, err
+	}
+	defer database.CloseConnection(db)
+
+	repository := repository.NewRepository(db)
+	workers := workers.NewWorkers(repository)
+
+	processingStart := time.Now()
+	resultsByHost := workers.RunWorkers(requests)
+	totalProcessingTime := time.Since(processingStart)
+
+	summarizeResult := summarizer.SummarizeResults(resultsByHost)
+
+	return &totalProcessingTime, &summarizeResult, nil
 }

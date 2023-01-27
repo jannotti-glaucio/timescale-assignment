@@ -5,6 +5,7 @@ import (
 
 	"github.com/jannotti-glaucio/timescale-assignment/internal/excepts"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/logger"
+	"github.com/jannotti-glaucio/timescale-assignment/internal/model"
 
 	"bufio"
 	"os"
@@ -13,7 +14,7 @@ import (
 
 const timeFormat = "2006-01-02 15:04:05"
 
-func ParseFile(path string) (QueryRequestsByHost, *excepts.Exception) {
+func ParseFile(path string) (model.QueryRequestsByHost, error) {
 
 	file, openErr := os.Open(path)
 	if openErr != nil {
@@ -24,18 +25,18 @@ func ParseFile(path string) (QueryRequestsByHost, *excepts.Exception) {
 	logger.Debug("Reading CSV file contents")
 	requests, readErr := parseLines(file)
 	if readErr != nil {
-		excepts.RethrowException(readErr, "Error parsing CSV file")
+		return nil, readErr
 	}
 
 	logger.Debug("CSV file contents read and grouped by hostname")
 	return requests, nil
 }
 
-func parseLines(file *os.File) (QueryRequestsByHost, *excepts.Exception) {
+func parseLines(file *os.File) (model.QueryRequestsByHost, error) {
 	scanner := bufio.NewScanner(file)
 	scanner.Split(bufio.ScanLines)
 
-	requests := make(QueryRequestsByHost)
+	requests := make(model.QueryRequestsByHost)
 	count := 0
 	for scanner.Scan() {
 		count++
@@ -47,10 +48,10 @@ func parseLines(file *os.File) (QueryRequestsByHost, *excepts.Exception) {
 
 		hostName, startDate, endDate, err := validateAndConvertColumns(scanner)
 		if err != nil {
-			excepts.RethrowException(err, "Error reading line [%d]", count)
+			return nil, err
 		}
 
-		request := QueryRequest{
+		request := model.QueryRequest{
 			StartDate: *startDate,
 			EndDate:   *endDate,
 		}
@@ -60,7 +61,7 @@ func parseLines(file *os.File) (QueryRequestsByHost, *excepts.Exception) {
 	return requests, nil
 }
 
-func validateAndConvertColumns(scanner *bufio.Scanner) (*string, *time.Time, *time.Time, *excepts.Exception) {
+func validateAndConvertColumns(scanner *bufio.Scanner) (*string, *time.Time, *time.Time, error) {
 
 	line := strings.Split(scanner.Text(), ",")
 	if len(line) < 3 {
@@ -90,7 +91,7 @@ func validateAndConvertColumns(scanner *bufio.Scanner) (*string, *time.Time, *ti
 	return &hostName, &startDate, &endDate, nil
 }
 
-func groupByHost(requestsByHost QueryRequestsByHost, hostName string, request QueryRequest) {
+func groupByHost(requestsByHost model.QueryRequestsByHost, hostName string, request model.QueryRequest) {
 
 	requests, exists := requestsByHost[hostName]
 
@@ -99,7 +100,7 @@ func groupByHost(requestsByHost QueryRequestsByHost, hostName string, request Qu
 		requestsByHost[hostName] = requests
 
 	} else {
-		var requests QueryRequests
+		var requests model.QueryRequests
 		requests = append(requests, request)
 		requestsByHost[hostName] = requests
 	}
