@@ -1,11 +1,14 @@
 build:
 	docker-compose build
 
+linter:
+	golangci-lint run
+
 tests:
-	go test -short -race -v ./...
+	go test -short -race ./...
 
 integration:
-	go test -run Integration -v ./...
+	go test --tags=integration ./cmd ./internal/database
 
 coverage:
 	go test -cover -p=1 -covermode=count -coverprofile=coverage.out ./...
