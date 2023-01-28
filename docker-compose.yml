@@ -33,4 +33,4 @@ services:
     volumes:
       - ./test/data/query_params.csv:/app/query_params.csv
     depends_on:
-      - flyway
+      - timescaledb
