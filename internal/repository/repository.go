@@ -20,7 +20,7 @@ type (
 	}
 )
 
-func NewRepository(db *sql.DB) *repository {
+func NewRepository(db *sql.DB) Repository {
 	return &repository{db: db}
 }
 
