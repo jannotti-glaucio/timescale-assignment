@@ -80,13 +80,8 @@ func process() (*time.Duration, *summarizer.SummarizeResult, error) {
 
 func cleanUp(db *sql.DB) {
 
-	err := database.CloseConnection(db)
-	if err != nil {
-		logger.FatalError(err)
-	}
-
-	err = logger.Clean()
-	if err != nil {
-		logger.FatalError(err)
+	dbErr := database.CloseConnection(db)
+	if dbErr != nil {
+		logger.FatalError(dbErr)
 	}
 }

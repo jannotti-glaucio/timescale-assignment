@@ -17,10 +17,6 @@ func Init() error {
 	return nil
 }
 
-func Clean() error {
-	return zap.L().Sync()
-}
-
 func Info(message string, args ...interface{}) {
 	message = formatMessage(message, args...)
 	zap.L().Info(message)
