@@ -83,8 +83,8 @@ func execWorker(repository repository.Repository, hostname string, requests mode
 
 		result := model.QueryResult{
 			Duration: duration,
-			MinUsage: *minUsage,
-			MaxUsage: *maxUsage,
+			MinUsage: minUsage,
+			MaxUsage: maxUsage,
 		}
 		results = append(results, result)
 	}

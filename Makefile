@@ -10,15 +10,19 @@ tests:
 integration:
 	go test --tags=integration ./cmd ./internal/database
 
+benchmark:
+	go test -bench=. ./...
+
 coverage:
 	go test -cover -p=1 -covermode=count -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out
 
-app:
+app-run:
 	go run ./cmd/main.go
 
-dependencies:
+docker-dependencies:
 	docker-compose up -d timescaledb flyway
 
-docker:
-	docker-compose up --build
+docker-run:
+	docker-compose build
+	docker-compose up app

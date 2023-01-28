@@ -20,8 +20,8 @@ func TestRunQuery(t *testing.T) {
 
 	startDate, _ := time.Parse(time.RFC3339, "2017-01-01 09:59:22")
 	endDate, _ := time.Parse(time.RFC3339, "2017-01-01 09:59:22")
-	expectedMaxUsage := float32(200)
-	expectedMinUsage := float32(100)
+	expectedMaxUsage := float64(200)
+	expectedMinUsage := float64(100)
 
 	mock.
 		ExpectQuery(regexp.QuoteMeta(query)).
@@ -32,6 +32,6 @@ func TestRunQuery(t *testing.T) {
 	maxUsage, minUsage, err := repository.RunQuery("host-01", startDate, endDate)
 
 	assert.Nil(t, err)
-	assert.Equal(t, expectedMaxUsage, *maxUsage)
-	assert.Equal(t, expectedMinUsage, *minUsage)
+	assert.Equal(t, expectedMaxUsage, maxUsage)
+	assert.Equal(t, expectedMinUsage, minUsage)
 }

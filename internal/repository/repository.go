@@ -12,7 +12,7 @@ const query = "select max(usage), min(usage) from cpu_usage cu where host = $1 a
 
 type (
 	Repository interface {
-		RunQuery(hostname string, startDate time.Time, endDate time.Time) (*float32, *float32, error)
+		RunQuery(hostname string, startDate time.Time, endDate time.Time) (float64, float64, error)
 	}
 
 	repository struct {
@@ -20,22 +20,26 @@ type (
 	}
 )
 
-func NewRepository(db *sql.DB) Repository {
-	return repository{db: db}
+func NewRepository(db *sql.DB) *repository {
+	return &repository{db: db}
 }
 
-func (r repository) RunQuery(hostname string, startDate time.Time, endDate time.Time) (*float32, *float32, error) {
+func (r *repository) RunQuery(hostname string, startDate time.Time, endDate time.Time) (float64, float64, error) {
 
 	logger.Debug("Executing query for hostname [%s], startDate: [%v], endDate: [%v]", hostname, startDate, endDate)
 
-	var maxUsage float32
-	var minUsage float32
+	var maxUsage sql.NullFloat64
+	var minUsage sql.NullFloat64
 	row := r.db.QueryRow(query, hostname, startDate, endDate)
 
 	err := row.Scan(&maxUsage, &minUsage)
 	if err != nil {
-		return nil, nil, excepts.ThrowException(excepts.ErrorExecutingQuery, "Error scaning fields from query: %v", err)
+		return 0, 0, excepts.ThrowException(excepts.ErrorExecutingQuery, "Error scaning fields from query: %v", err)
 	}
 
-	return &maxUsage, &minUsage, nil
+	if maxUsage.Valid && minUsage.Valid {
+		return maxUsage.Float64, minUsage.Float64, nil
+	} else {
+		return 0, 0, nil
+	}
 }

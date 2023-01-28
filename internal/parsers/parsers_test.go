@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/jannotti-glaucio/timescale-assignment/internal/excepts"
+	"github.com/jannotti-glaucio/timescale-assignment/internal/logger"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/model"
 	"github.com/jannotti-glaucio/timescale-assignment/internal/tests"
 	"github.com/stretchr/testify/assert"
@@ -184,4 +185,19 @@ func TestGroupByHost(t *testing.T) {
 	assert.Equal(t, 1, len(requestsHost2))
 	assert.Equal(t, host2Request1.StartDate, requestsHost2[0].StartDate)
 	assert.Equal(t, host2Request1.EndDate, requestsHost2[0].EndDate)
+}
+
+func BenchmarkParseLines(b *testing.B) {
+
+	file, err := os.Open("../../test/data/query_params_bench.csv")
+	if err != nil {
+		logger.FatalError(err)
+	}
+
+	for n := 0; n < b.N; n++ {
+		requestsByHost, err := parseLines(file)
+
+		assert.Nil(b, err)
+		assert.NotNil(b, requestsByHost)
+	}
 }

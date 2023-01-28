@@ -13,8 +13,8 @@ type QueryRequestsByHost map[string]QueryRequests
 
 type QueryResult struct {
 	Duration time.Duration
-	MinUsage float32
-	MaxUsage float32
+	MinUsage float64
+	MaxUsage float64
 }
 
 type QueryResults []QueryResult

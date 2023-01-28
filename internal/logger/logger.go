@@ -36,6 +36,10 @@ func Fatal(message string, args ...interface{}) {
 	zap.L().Fatal(message)
 }
 
+func FatalError(err error) {
+	zap.L().Fatal(err.Error())
+}
+
 func formatMessage(message string, args ...interface{}) string {
 	if len(args) > 0 {
 		return fmt.Sprintf(message, args...)
