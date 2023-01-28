@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"os"
 	"time"
 
@@ -37,7 +38,6 @@ func process() (*time.Duration, *summarizer.SummarizeResult, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	defer logger.Clean()
 
 	// Environment variables
 	err = env.LoadFromFile()
@@ -63,7 +63,8 @@ func process() (*time.Duration, *summarizer.SummarizeResult, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	defer database.CloseConnection(db)
+
+	defer cleanUp(db)
 
 	repository := repository.NewRepository(db)
 	workers := workers.NewWorkers(repository)
@@ -75,4 +76,17 @@ func process() (*time.Duration, *summarizer.SummarizeResult, error) {
 	summarizeResult := summarizer.SummarizeResults(resultsByHost)
 
 	return &totalProcessingTime, &summarizeResult, nil
+}
+
+func cleanUp(db *sql.DB) {
+
+	err := database.CloseConnection(db)
+	if err != nil {
+		logger.FatalError(err)
+	}
+
+	err = logger.Clean()
+	if err != nil {
+		logger.FatalError(err)
+	}
 }
