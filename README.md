@@ -1,6 +1,8 @@
 # About the Project
 
-This project is a tool to benchmark a TimescaleDB instance, reading from a CSV file a list of values to be used to parallel run queries on a TimescaleDB and print metrics of this execution.
+This project is a tool to benchmark a TimescaleDB instance. reading from a CSV file a list of values to be used to parallel run queries on a TimescaleDB and print metrics of this execution.
+
+## Metrics
 
 The following metrics are calculated:
 - Number of Executed Queries - counts how many queries are executed during all the process
@@ -10,6 +12,26 @@ The following metrics are calculated:
 - Average Query Time Execution - calculate the average time of all executed queries
 - Maximum Query Time Execution - calculate the time of the query that spends more time to execute
 
+## CSV File
+
+The CSV file processed by the tool must have the following layout:
+- The first row must have the column names: ``hostname,start_time,end_time``
+- From the second line onward:
+    - The first column is the hostname
+    - The second column is the starte date in the following format: ``YYYY-MM-DD HH:mm:SS``
+    - The third column is the end date in the following format: ``YYYY-MM-DD HH:mm:SS``
+
+Example:
+```
+hostname,start_time,end_time
+host_000008,2017-01-01 08:59:22,2017-01-01 09:59:22
+host_000001,2017-01-02 13:02:02,2017-01-02 14:02:02
+host_000008,2017-01-02 18:50:28,2017-01-02 19:50:28
+host_000002,2017-01-02 15:16:29,2017-01-02 16:16:29
+host_000003,2017-01-01 08:52:14,2017-01-01 09:52:14
+host_000002,2017-01-02 00:25:56,2017-01-02 01:25:56
+```
+
 ## Used Libraries
 -	[zap](https://pkg.go.dev/go.uber.org/zap) - Improved logging library
 - 	[pgx](github.com/jackc/pgx/v5) - PostgreSQL driver
@@ -18,10 +40,19 @@ The following metrics are calculated:
 -	[go-sqlmock](github.com/DATA-DOG/go-sqlmock) - Library to mock sql package interfaces and functions
 
 ## Requirements
+- Linux or MacOS environment
+    - WSL Linuix for Windows
 - [golang](https://go.dev) 1.19
 - [golangci-lint](https://golangci-lint.run/usage/install/)
+- [docker engine](https://docs.docker.com/engine/install/) or [docker-desktop](https://www.docker.com/products/docker-desktop/)
 - [docker-compose](https://docs.docker.com/compose/install/)
-- [make](https://www.gnu.org/software/make/) tool
+- [make tool](https://www.gnu.org/software/make/)
+
+# Configuration
+
+Before running the project you need to generate the configuration file. Copy the file ``.env.sample`` to a file with the name ``.env``. Use the default parameters or change its values to your environment:
+- FILE_PATH - path to the csv file
+- DB_URL - connection url to TimescaleDB
 
 # Running the Project
 
@@ -62,15 +93,15 @@ Start a TimescaleDB in a container and run a flyway container to create the data
 
 ## 7. Standalone App
 
-Run the project as a standalone process, , using the TimescaleDB started in the command 5. 
-> Before executing it, you need to copy the file ``.env.sample`` to a file ``.env`` and change its values to your environment.
+Run the project as a standalone process, using go runtime
+> Before executing it you need to run the ``Project Dependencies`` command, to start a TimescaleDB instance.
 
 ```make app-run```
 
 ## 8. Docker App
 
 Run the project in a docker container.
-> Before executing it you need to run the ``Project Dependencies`` command, to start a TimescaleDB instance,
+> Before executing it you need to run the ``Project Dependencies`` command, to start a TimescaleDB instance.
 
 ```make docker-app```
 
@@ -81,9 +112,9 @@ Run integration tests.
 
 ```make integration```
 
-## 10. Bencharmk Tests
+## 10. Benchmark Tests
 
 Run benchmarks test.
-> Before executing it you need to run the ``Project Dependencies`` command, to start a TimescaleDB instance,
+> Before executing it you need to run the ``Project Dependencies`` command, to start a TimescaleDB instance.
 
 ```make benchmark```
