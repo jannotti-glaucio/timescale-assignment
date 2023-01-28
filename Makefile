@@ -20,9 +20,12 @@ coverage:
 app-run:
 	go run ./cmd/main.go
 
+docker-run:
+	docker-compose up --build
+
 docker-dependencies:
 	docker-compose up -d timescaledb flyway
 
-docker-run:
+docker-app:
 	docker-compose build
 	docker-compose up app
