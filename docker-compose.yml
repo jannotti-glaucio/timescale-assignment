@@ -32,5 +32,3 @@ services:
       DB_URL: postgres://homework:abc123@timescaledb:5432/homework
     volumes:
       - ./test/data/query_params.csv:/app/query_params.csv
-    depends_on:
-      - timescaledb
