@@ -3,7 +3,4 @@
     "go.lintFlags": [
         "--fast"
     ],
-    //"gopls": {
-        //"build.buildFlags": ["tests","integration"]
-    //}
 }
