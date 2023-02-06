@@ -10,7 +10,7 @@ services:
     volumes:
       - ./scripts/flyway/data:/flyway/data
     ports:
-      - 5434:5432
+      - 5432:5432
 
   flyway:
     container_name: timescale-assignment-flyway
@@ -21,14 +21,13 @@ services:
     volumes:
       - ./scripts/flyway/flyway.conf:/flyway/conf/flyway.conf
       - ./scripts/flyway/sql:/flyway/sql
-    depends_on:
-      - timescaledb
 
   app:
     container_name: timescale-assignment-app
     build: .
+    env_file: .env
     environment:
       FILE_PATH: /app/query_params.csv
-      DB_URL: postgres://homework:abc123@timescaledb:5432/homework
+      DB_URL: ${DOCKER_DB_URL}
     volumes:
-      - ./test/data/query_params.csv:/app/query_params.csv
+      - ${DOCKER_FILE_PATH}:/app/query_params.csv

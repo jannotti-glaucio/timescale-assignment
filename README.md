@@ -50,14 +50,19 @@ host_000002,2017-01-02 00:25:56,2017-01-02 01:25:56
 
 # Configuration
 
-Before running the project you need to generate the configuration file. Copy the file ``.env.sample`` to a file with the name ``.env``. Use the default parameters or change its values to your environment:
-- FILE_PATH - path to the csv file
-- DB_URL - connection url to TimescaleDB
+Before running the project you need to generate the configuration file. Copy the file ``.env.sample`` to a file with the name ``.env``. Use the default parameter values or change its values to your environment.
 
-# Running the Project
+These parameters below are used when you are running the tool as a standalone app:
+- FILE_PATH - path to the csv file.
+- DB_URL - connection url to a TimescaleDB instance.
 
-The project has make targets to easly execute some of the project operations.
-On the project root folder run the following commands:
+These parameters below are used when you are running the tool in a docker container:
+- DOCKER_FILE_PATH - path to the csv file.
+- DOCKER_DB_URL - connection url to a TimescaleDB instance.
+
+# Project Commands
+
+The project has make targets to easly execute some of the project operations. On the project root folder you can run the following commands:
 
 ## 1. Build
 Build the project and create a docker image.
@@ -79,42 +84,63 @@ Run a linter in the project code, using golangci-lint.
 
 ```make linter```
 
-## 5. Docker Run
+## 5. TimescaleDB
 
-Run the project and all dependencites in docker containers.
+Starts a TimescaleDB instance in a docker container.
 
-```make docker-run```
+```make timescaledb```
 
-## 6. Project Dependencies
+## 6. Migrations
 
-Start a TimescaleDB in a container and run a flyway container to create the database objets. This is required to run some of the commands bellow.
+Starts a flyway container and run the migrations to create the database objets in TimescaleDB.
+> Before executing it you need to run the ``TimescaleDB`` command.
 
-```make docker-dependencies```
+```make migrations```
 
-## 7. Standalone App
-
-Run the project as a standalone process, using go runtime
-> Before executing it you need to run the ``Project Dependencies`` command, to start a TimescaleDB instance.
-
-```make app-run```
-
-## 8. Docker App
+## 7. Run Docker App
 
 Run the project in a docker container.
-> Before executing it you need to run the ``Project Dependencies`` command, to start a TimescaleDB instance.
+> Before executing it you need to run the ``TimescaleDB`` and ``Migrations`` commands.
 
 ```make docker-app```
 
-## 9. Integration Tests
+## 8. Integration Tests
 
 Run integration tests.
-> Before executing it you need to run the ``Project Dependencies`` command, to start a TimescaleDB instance.
+> Before executing it you need to run the ``TimescaleDB`` and ``Migrations`` commands.
 
 ```make integration```
 
-## 10. Benchmark Tests
+## 9. Benchmark Tests
 
 Run benchmarks test.
-> Before executing it you need to run the ``Project Dependencies`` command, to start a TimescaleDB instance.
+> Before executing it you need to run the ``TimescaleDB`` and ``Migrations`` commands.
 
 ```make benchmark```
+
+# Running the Project
+
+To run the project you need to do the following steps:
+- Create the environment file as described in the section ``Configuration``;
+
+- Open a terminal in the project root folder;
+
+- Execute the commands bellow to start the timescaledb instance and run the database migrations:
+
+    ```make timescaledb```
+
+    ```make migrations```
+
+- Execute the command bellow to run the tool:
+
+    ```make docker-app```
+
+- The results will be displayed in the console, like the example bellow:
+```timescale-assignment-app | 2023-02-06T16:08:30.285Z     INFO    ##### Processing Results #####
+Number of Queries:     [200]
+Total Processing Time: [220] milliseconds
+Minimum Query Time:    [2082952] nanoseconds
+Median Query Time:     [5533961] nanoseconds
+Average Query Time:    [9359771] nanoseconds
+Maximum Query Time:    [65949007] nanoseconds
+```
