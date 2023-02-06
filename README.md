@@ -97,12 +97,26 @@ Starts a flyway container and run the migrations to create the database objets i
 
 ```make migrations```
 
-## 7. Run Docker App
+## 7. Standalone App
+
+Run the project as a standalone process, using go runtime
+> Before executing it you need to run the ``Project Dependencies`` command, to start a TimescaleDB instance.
+
+```make app-run```
+
+## 8. Docker App
 
 Run the project in a docker container.
 > Before executing it you need to run the ``TimescaleDB`` and ``Migrations`` commands.
 
 ```make docker-app```
+
+## 8. Standalone App
+
+Run the project as a standalone process, using go runtime
+> Before executing it you need to run the ``TimescaleDB`` and ``Migrations`` commands.
+
+```make app```
 
 ## 8. Integration Tests
 
