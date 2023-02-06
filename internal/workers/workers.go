@@ -25,6 +25,8 @@ func NewWorkers(repo repository.Repository) Workers {
 
 func (w Workers) RunWorkers(requests model.QueryRequestsByHost) model.QueryResults {
 
+	logger.Debug("Starting workers to process the file contents")
+
 	numJobs := len(requests)
 	var waitToStart sync.WaitGroup
 	var waitToFinish sync.WaitGroup
@@ -67,7 +69,7 @@ func execWorker(repository repository.Repository, hostname string, requests mode
 
 	defer waitToFinish.Done()
 
-	logger.Info("Starting executing %d queries for hostname [%s]", len(requests), hostname)
+	logger.Info("Executing %d queries for hostname [%s]", len(requests), hostname)
 	var results model.QueryResults
 
 	waitToStart.Wait()

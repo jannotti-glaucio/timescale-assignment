@@ -22,13 +22,13 @@ func ParseFile(path string) (model.QueryRequestsByHost, error) {
 	}
 	defer file.Close()
 
-	logger.Debug("Reading CSV file contents")
+	logger.Debug("Reading CSV file [%s]", path)
 	requests, readErr := parseLines(file)
 	if readErr != nil {
 		return nil, readErr
 	}
 
-	logger.Debug("CSV file contents read and grouped by hostname")
+	logger.Debug("CSV file sucessfull read and grouped by hostname")
 	return requests, nil
 }
 
